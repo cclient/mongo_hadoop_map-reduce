@@ -32,6 +32,7 @@ public class MongoMaxTemperature extends MongoTool {
 		MongoConfigUtil.setInputFormat(getConf(), MongoInputFormat.class);
 		MongoConfigUtil.setOutputFormat(getConf(), MongoOutputFormat.class);
 		config.setInputURI("mongodb://172.16.231.1:27017/lewifi.auditOrigData");
+		config.setQuery("{apMac:{$in:[\"00:21:26:00:10:A3\",\"00:21:26:00:14:C3\"]}}");
 		// config.setInputKey("headers.From");
 		config.setMapper(MongoMaxTemperatureMapper.class);
 		
