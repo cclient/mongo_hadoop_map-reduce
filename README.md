@@ -15,18 +15,7 @@
 
 优点：mongo只能单机单线程（不作shard的情况），hadoop-mongo可以集群处理。
 
-缺点：查了些资料，发现不能设计mongodb 的输入条件，猜想是因为该中间件是直接读数据文件，并根据数据文件分割数据，加查询条件则不容易分割，只能作全表分析。
-
-    若要设定条件，有以下两种思路。
-
-   1可以先以query,dump下来mongo表（collection）A中的数据，再restore到单独的表B中，对表B执行hadoop任务。
-
-   2可以在mapper任务中，验证条件，符合条件才context.wirte(Writable,Writable)，不符合的跳过。
-
-   3按1的思路拓展mongo-hadoop中间件，在map之前，添加任务，先分析出一张临时表，在reducer之后，删除该表（……时间充分再提代码）。
-
 完成代码
-
 
 近期一直写的脚本语言，再回头写点JAVA，好悲催，感觉很受限制。
  
