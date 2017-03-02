@@ -1,13 +1,10 @@
-package group.artifactid;
+package my.mongoMapReduce;
 
-import java.io.IOException;
-
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.bson.BSONObject;
 
-import com.mongodb.hadoop.io.BSONWritable;
+import java.io.IOException;
 
 public class MongoMaxTemperatureMapper extends
 		Mapper<Object, BSONObject, Text, Text> {
@@ -24,11 +21,10 @@ public class MongoMaxTemperatureMapper extends
 			}
 			int firstargindex = url.indexOf('/');
 			if(firstargindex>-1){
-				url = url.substring(0, firstargindex);	
+				url = url.substring(0, firstargindex);
 			}
 			//验证输入 带.则参数错误，临时转为}
 			url=url.replace('.','}');
-			
 			context.write(new Text(apmac), new Text(clientmac + url));
 		}
 	}

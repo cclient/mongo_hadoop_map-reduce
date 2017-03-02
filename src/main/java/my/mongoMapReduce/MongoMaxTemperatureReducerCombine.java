@@ -1,56 +1,43 @@
-package group.artifactid;
+package my.mongoMapReduce;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
 import com.mongodb.hadoop.io.BSONWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.bson.BasicBSONObject;
 
+import java.io.IOException;
+import java.util.*;
+
 public class MongoMaxTemperatureReducerCombine extends
 		Reducer<Text, Text, Text, BSONWritable> {
-	public class UrlCount {
-		public UrlCount(String url, int count) {
-			this.Url = url;
-			this.Count = count;
-		}
-
-		String Url;
-		int Count;
-	}
-
-	public List<UrlCount> compresstopobj(BasicBSONObject topobj, int topnum) {
-		List<UrlCount> studentList = new ArrayList<UrlCount>();
+	private List<Map.Entry<String,Integer>> compressTopList(BasicBSONObject topobj, int topnum) {
+		List<Map.Entry<String,Integer>> studentList = new ArrayList<Map.Entry<String,Integer>>();
 		for (Map.Entry<String, Object> entry : topobj.entrySet()) {
 			String Url = entry.getKey();
 			String scount = entry.getValue().toString();
-			studentList.add(new UrlCount(Url, Integer.parseInt(scount)));
+			studentList.add(new AbstractMap.SimpleEntry<String,Integer>(Url, Integer.parseInt(scount)));
 		}
-		Collections.sort(studentList, new Comparator<UrlCount>() {
+		Collections.sort(studentList, new Comparator<Map.Entry<String,Integer>>() {
 			@Override
-			public int compare(UrlCount o1, UrlCount o2) {
-				if (o1.Count > o2.Count) {
-					return -1;
-				} else if (o1.Count < o2.Count) {
-					return 1;
-				} else {
-					return 0;
-				}
+			public int compare(Map.Entry<String,Integer> o1, Map.Entry<String,Integer> o2) {
+				return o1.getValue().compareTo(o2.getValue());
 			}
 		});
 		System.out.print("--------这里排序成功，但入库时，mongo按键名（）排序,这里的排序是为筛选前100条用\n");
 		for (int i = 0; i < studentList.size(); i++) {
-			System.out.print(studentList.get(i).Count + "\n");
+			System.out.print(studentList.get(i).getValue() + "\n");
 		}
-
 		if (studentList.size() > topnum) {
 			studentList = studentList.subList(0, topnum);
 		}
 		return studentList;
+	}
+	private BasicBSONObject listToBSONObj(List<Map.Entry<String,Integer>> list){
+		BasicBSONObject newurlcmap = new BasicBSONObject();
+		for (Map.Entry<String, Integer> stringIntegerEntry : list) {
+			newurlcmap.put(stringIntegerEntry.getKey(),stringIntegerEntry.getValue());
+		}
+		return newurlcmap;
 	}
 
 	@Override
@@ -63,13 +50,12 @@ public class MongoMaxTemperatureReducerCombine extends
 			String clientmac = subline.substring(0, 17);
 			int indexcount = subline.indexOf("|");
 			int maplastcount = 1;
-			String url = null;
+			String url;
 			if (indexcount > -1) {
 				indexcount++;
 				url = subline.substring(17, indexcount);
 				String mapcount = subline.substring(indexcount);
 				maplastcount = Integer.parseInt(mapcount);
-
 			} else {
 				url = subline.substring(17);
 			}
@@ -80,7 +66,6 @@ public class MongoMaxTemperatureReducerCombine extends
 				clientmacmap.put(clientmac, urlmap);
 			}
 			Object eveurl = urlmap.get(url);
-
 			if (eveurl == null && !url.equals(" ")) {
 				urlmap.put(url, maplastcount);
 			} else {
@@ -89,24 +74,12 @@ public class MongoMaxTemperatureReducerCombine extends
 			}
 			count++;
 			if (count == 10000) {
-				List<UrlCount> arr = compresstopobj(urlmap, 100);
-				BasicBSONObject newurlcmap = new BasicBSONObject();
-				for (int i = 0; i < arr.size(); i++) {
-					UrlCount cuc = arr.get(i);
-					newurlcmap.put(cuc.Url, cuc.Count);
-				}
-				urlmap = newurlcmap;
+				urlmap = listToBSONObj(compressTopList(urlmap, 100));
 			}
 		}
 		for (Map.Entry<String, Object> entry : clientmacmap.entrySet()) {
 			BasicBSONObject urlmap = (BasicBSONObject) entry.getValue();
-			List<UrlCount> arr = compresstopobj(urlmap, 100);
-			BasicBSONObject newurlcmap = new BasicBSONObject();
-			for (int i = 0; i < arr.size(); i++) {
-				UrlCount cuc = arr.get(i);
-				newurlcmap.put(cuc.Url, cuc.Count);
-			}
-			urlmap = newurlcmap;
+			urlmap = listToBSONObj(compressTopList(urlmap, 100));
 		}
 		context.write(apmac, new BSONWritable(clientmacmap));
 	}
