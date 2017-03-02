@@ -9,9 +9,6 @@
 Mongo collection 数据格式
 
 clientMac和url 先拼在一起，再按mac长度分割
-要求 计算每个apMac下每个clientMac top100的url
-
-数据流程 
 
 mongodb 原始数据
 {
@@ -21,26 +18,30 @@ mongodb 原始数据
     "url" : "extshort.weixin.qq.com",
     "clientMac" : "ff:ee:dd:cc:bb:aa"
 }
+
+要求 计算每个apMac下每个clientMac top100的url
+
 map:因(clientMac长度固定,按字符分拆clientMac和url即可,因此未用分隔符)
+
 [{apmac:[clientmac+url]}]
+
 例
+
 [{"aa:bb:cc:dd:ee:ff":[ff:ee:dd:cc:bb:aaextshort.weixin.qq.com]}]
 
-compine:
+compine: 如果有相同的client+url 则统计个数，以|分隔
 
-如果有相同的client+url 则统计个数，以|分隔
 [{apmca:[clientmac+url|url_num]}]
+
 例
+
 [{"aa:bb:cc:dd:ee:ff":[ff:ee:dd:cc:bb:aaextshort.weixin.qq.com|100]}]
 
-reducer:
-按mac长度和"|"分隔出clientMac、url、url_num
+reducer:按mac长度和"|"分隔出clientMac、url、url_num
 
 聚合取url_num sum,取top100
 
 最后结果如下
-
-因为不同版本的mongo对 key里的.号处理方式不同(字符串或子对象的key),实际执行时.都先统一替换为}再处理,为方便理解,文档依然用.
 
 {
     "_id": "00:21:26:00:0A:FF",
@@ -65,3 +66,5 @@ reducer:
         "www.ibook.info": 1
     }
 }
+
+因为不同版本的mongo对 key里的.号处理方式不同(字符串或子对象的key),实际执行时.都先统一替换为}再处理,为方便理解,文档依然用.表示
