@@ -1,8 +1,7 @@
-## 官方 http://docs.mongodb.org/ecosystem/tutorial/getting-started-with-hadoop/
+### 官方 http://docs.mongodb.org/ecosystem/tutorial/getting-started-with-hadoop/
 
-## mongo-haoop项目地址 https://github.com/mongodb/mongo-hadoop
+### mongo-haoop项目地址 https://github.com/mongodb/mongo-hadoop
 
-## 该代码托管 https://github.com/cclient/mongo_hadoop_map-reduce
 
 原业务 由nodejs+async编写,较耗时且分布式实现复杂,改为map、reduce实现。
 
